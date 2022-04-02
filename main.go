@@ -8,39 +8,61 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+type App struct {
+	Config *DiscordConfig
+	Session *discordgo.Session
+}
+
+func New(config *DiscordConfig) (*App, error) {
+	dg, err := discordgo.New("Bot " + config.Token);
+	if err != nil {
+		return nil, err;
+	}
+
+	return &App{
+		Config: config,
+		Session: dg,
+	}, nil
+}
+
+func (a *App) Open() error {
+	 return a.Session.Open()
+}
+
+func (a *App) Close() error {
+	return a.Session.Close()
+}
+
 func main() {
-	var c, err = NewConfig();
+	config, err := NewConfig()
 	if err != nil {
 		log.Fatal(err)
-		return
 	}
 
-	dg, err := discordgo.New("Bot " + c.Token);
+	app, err := New(config)
 	if err != nil {
-		log.Println("error creating Discord session,", err)
-		return;
+		log.Fatal(err)
 	}
 
-	err = dg.Open()
+	err = app.Open()
 	if err != nil {
-		log.Println("error opening connection,", err)
-		return
+		log.Fatal(err)
 	}
 
-	dg.AddHandler(ChannelVoiceJoin);
-
-	log.Println("Bot is now running. Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	<-sc
-	dg.Close()
+
+	err = app.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func ChannelVoiceJoin(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
-
 
 	for _, g := range s.State.Guilds {
 		for _, vs := range g.VoiceStates {
