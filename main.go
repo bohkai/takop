@@ -48,6 +48,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	app.Session.AddHandler(ChannelVoiceJoin)
+	app.Session.AddHandler(ChannelVoiseDisconecct)
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
@@ -56,20 +58,6 @@ func main() {
 	err = app.Close()
 	if err != nil {
 		log.Fatal(err)
-	}
-}
-
-func ChannelVoiceJoin(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.Author.ID == s.State.User.ID {
-		return
-	}
-
-	for _, g := range s.State.Guilds {
-		for _, vs := range g.VoiceStates {
-			if m.Author.ID == vs.UserID {
-				s.ChannelVoiceJoin(g.ID, vs.ChannelID, false, false)
-			}
-		}
 	}
 }
 
