@@ -50,6 +50,8 @@ func main() {
 	}
 	app.Session.AddHandler(ChannelVoiceJoin)
 	app.Session.AddHandler(ChannelVoiseDisconecct)
+	app.Session.AddHandler(RadioList);
+	app.Session.AddHandler(RadioPlay);
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
