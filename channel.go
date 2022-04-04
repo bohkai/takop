@@ -4,7 +4,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-func ChannelVoiceJoin(s *discordgo.Session, m *discordgo.MessageCreate) {
+func Join(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
@@ -18,14 +18,23 @@ func ChannelVoiceJoin(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
+	_, err = ChannelVoiceJoin(s, m)
+	if err != nil {
+		return
+	}
+}
+
+func ChannelVoiceJoin(s *discordgo.Session, m *discordgo.MessageCreate)(*discordgo.VoiceConnection, error)  {
 	for _, g := range s.State.Guilds {
 		for _, vs := range g.VoiceStates {
 			if m.Author.ID != vs.UserID {
 				continue
 			}
-			s.ChannelVoiceJoin(g.ID, vs.ChannelID, false, false)
+			return s.ChannelVoiceJoin(g.ID, vs.ChannelID, false, false)
 		}
 	}
+
+	return nil, nil
 }
 
 func ChannelVoiseDisconecct(s *discordgo.Session, m *discordgo.MessageCreate) {

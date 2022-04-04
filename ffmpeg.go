@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"log"
 	"os/exec"
 )
 
@@ -28,6 +27,5 @@ func (f *ffmpeg) setArgs(args ...string) {
 
 func (f *ffmpeg) Run(output string) error {
 	f.setArgs(output)
-	log.Println(f.Args)
 	return f.Cmd.Run()
 }

@@ -48,7 +48,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	app.Session.AddHandler(ChannelVoiceJoin)
+	app.Session.AddHandler(Join)
 	app.Session.AddHandler(ChannelVoiseDisconecct)
 	app.Session.AddHandler(RadioList);
 	app.Session.AddHandler(RadioPlay);

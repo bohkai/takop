@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/bwmarrin/dgvoice"
 	"github.com/bwmarrin/discordgo"
 	"github.com/yyoshiki41/go-radiko"
 )
@@ -90,17 +91,27 @@ func RadioPlay(s *discordgo.Session, m *discordgo.MessageCreate) {
 	ffmpegArgs := []string{
 		"-headers", "X-Radiko-Authtoken: " + client.AuthToken(),
 		"-i", streamURL,
+		"-f",
+		"segment", "-segment_time", "10",
 		"-y",
 		"-vn",
 		"-acodec",
 		"copy",
 	}
 	ffmpegCmd.setArgs(ffmpegArgs...)
-	err = ffmpegCmd.Run("./test.m4a")
+	go func() {
+		ffmpegCmd.Run("./audio/out-%2d.m4a")
+		if err != nil {
+			log.Println("ffmpeg error:" + err.Error())
+			return
+		}
+	}()
+
+	v, err := ChannelVoiceJoin(s, m)
 	if err != nil {
-		log.Println("ffmpeg error:" + err.Error())
+		log.Println(err)
 		return
 	}
-
+	dgvoice.PlayAudioFile(v, "./test.m4a", make(<-chan bool))
 	s.ChannelMessageSend(m.ChannelID, "Playing")
 }
