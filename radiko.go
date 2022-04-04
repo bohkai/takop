@@ -55,11 +55,6 @@ func RadioPlay(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	items, err := radiko.GetStreamSmhMultiURL(parsed[1])
-	if err != nil {
-		return
-	}
-
 	ctx := context.Background()
 	client, err := radiko.New("")
 	if err != nil {
@@ -70,6 +65,10 @@ func RadioPlay(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
+	items, err := radiko.GetStreamSmhMultiURL(parsed[1])
+	if err != nil {
+		return
+	}
 	var streamURL string
 	for _, item := range items {
 		if !item.Areafree {
@@ -89,16 +88,15 @@ func RadioPlay(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	ffmpegArgs := []string{
-		"-loglevel", "quiet",
-		"-fflags", "+discardcorrupt",
 		"-headers", "X-Radiko-Authtoken: " + client.AuthToken(),
 		"-i", streamURL,
+		"-y",
 		"-vn",
 		"-acodec",
 		"copy",
 	}
 	ffmpegCmd.setArgs(ffmpegArgs...)
-	err = ffmpegCmd.Run("./test.acc")
+	err = ffmpegCmd.Run("./test.m4a")
 	if err != nil {
 		log.Println("ffmpeg error:" + err.Error())
 		return
