@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/bwmarrin/dgvoice"
 	"github.com/bwmarrin/discordgo"
@@ -92,7 +93,7 @@ func RadioPlay(s *discordgo.Session, m *discordgo.MessageCreate) {
 		"-headers", "X-Radiko-Authtoken: " + client.AuthToken(),
 		"-i", streamURL,
 		"-f",
-		"segment", "-segment_time", "10",
+		"segment", "-segment_time", "30",
 		"-y",
 		"-vn",
 		"-acodec",
@@ -100,7 +101,7 @@ func RadioPlay(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 	ffmpegCmd.setArgs(ffmpegArgs...)
 	go func() {
-		ffmpegCmd.Run("./audio/out-%2d.m4a")
+		ffmpegCmd.Run("./audio/out-%d.m4a")
 		if err != nil {
 			log.Println("ffmpeg error:" + err.Error())
 			return
@@ -112,6 +113,16 @@ func RadioPlay(s *discordgo.Session, m *discordgo.MessageCreate) {
 		log.Println(err)
 		return
 	}
-	dgvoice.PlayAudioFile(v, "./test.m4a", make(<-chan bool))
-	s.ChannelMessageSend(m.ChannelID, "Playing")
+
+	s.ChannelMessageSend(m.ChannelID, "バッファリング中... 30秒お待ち下さい")
+	time.Sleep(time.Second * 30)
+	s.ChannelMessageSend(m.ChannelID, "再生します")
+
+	number := 0
+	for {
+		stop := make(chan bool)
+		path := fmt.Sprintf("./audio/out-%d.m4a", number)
+		dgvoice.PlayAudioFile(v, path, stop)
+		number++
+	}
 }
