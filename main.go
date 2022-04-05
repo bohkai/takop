@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"os"
 	"os/signal"
 	"syscall"
+
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -44,14 +46,21 @@ func main() {
 		log.Fatal(err)
 	}
 
+	ctx := context.Background()
+	channel, err := NewChannel(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	err = app.Open()
 	if err != nil {
 		log.Fatal(err)
 	}
-	app.Session.AddHandler(Join)
-	app.Session.AddHandler(ChannelVoiseDisconecct)
-	app.Session.AddHandler(RadioList);
-	app.Session.AddHandler(RadioPlay);
+
+	app.Session.AddHandler(channel.Join)
+	app.Session.AddHandler(channel.Leave)
+	app.Session.AddHandler(channel.List)
+	app.Session.AddHandler(channel.Play)
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)

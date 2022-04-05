@@ -2,75 +2,62 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/bwmarrin/dgvoice"
 	"github.com/bwmarrin/discordgo"
-	"github.com/yyoshiki41/go-radiko"
+	goradiko "github.com/yyoshiki41/go-radiko"
 )
 
-func RadioList(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.Author.ID == s.State.User.ID {
-		return
+type radiko struct {
+	client          *goradiko.Client
+	token           string
+	IsVoicePlayStop chan bool
+	IsRadioStop     chan bool
+	ctx             context.Context
+}
+
+func NewRadiko(ctx context.Context) (*radiko, error) {
+	client, err := goradiko.New("")
+	if err != nil {
+		return nil, err
 	}
 
-	parsed, err := Parse(m.Content)
+	_, err = client.AuthorizeToken(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return &radiko{
+		client,
+		client.AuthToken(),
+		make(chan bool),
+		make(chan bool),
+		ctx}, nil
+}
+
+func (r *radiko) RadikoList(s *discordgo.Session, m *discordgo.MessageCreate) {
+	stations, err := r.client.GetNowPrograms(r.ctx)
 	if err != nil {
 		return
 	}
-
-	if len(parsed) != 1 || parsed[0] != "list" {
-		return
-	}
-
-	client, err := radiko.New("")
-	if err != nil {
-		return
-	}
-
-	stations, err := client.GetNowPrograms(context.Background())
-	if err != nil {
-		return
-	}
-
 	message := ""
 	for _, station := range stations {
 		message = message + fmt.Sprintf("%s | %30.30s | %-30.20s\n", station.ID, station.Name, station.Scd.Progs.Progs[0].Title)
 	}
 	s.ChannelMessageSend(m.ChannelID, message)
-	context.Background().Done()
 }
 
-func RadioPlay(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.Author.ID == s.State.User.ID {
-		return
+func (r *radiko) RadikoPlay(s *discordgo.Session, m *discordgo.MessageCreate, v *discordgo.VoiceConnection, channel string, ffmpegCmd *ffmpeg) error {
+	items, err := goradiko.GetStreamSmhMultiURL(channel)
+	if err != nil {
+		return err
 	}
 
-	parsed, err := Parse(m.Content)
-	if err != nil {
-		return
-	}
-
-	if len(parsed) != 2 || parsed[0] != "play" {
-		return
-	}
-
-	ctx := context.Background()
-	client, err := radiko.New("")
-	if err != nil {
-		return
-	}
-	_, err = client.AuthorizeToken(ctx)
-	if err != nil {
-		return
-	}
-
-	items, err := radiko.GetStreamSmhMultiURL(parsed[1])
-	if err != nil {
-		return
-	}
 	var streamURL string
 	for _, item := range items {
 		if !item.Areafree {
@@ -80,50 +67,73 @@ func RadioPlay(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	if streamURL == "" {
-		return
+		return errors.New("no stream URL")
 	}
 
-	ffmpegCmd, err := NewFfmpeg(ctx, streamURL)
-	if err != nil {
-		log.Println(err)
-		return
+	audioPath := "./audio"
+	os.RemoveAll(audioPath)
+	_, err = os.Stat(audioPath)
+	if os.IsNotExist(err) {
+		os.Mkdir(audioPath, 0777)
 	}
 
 	ffmpegArgs := []string{
-		"-headers", "X-Radiko-Authtoken: " + client.AuthToken(),
+		"-headers", "X-Radiko-Authtoken: " + r.token,
 		"-i", streamURL,
 		"-f",
-		"segment", "-segment_time", "30",
+		"segment", "-segment_time", "10",
 		"-y",
 		"-vn",
 		"-acodec",
 		"copy",
 	}
-	ffmpegCmd.setArgs(ffmpegArgs...)
+	ffmpegCmd.SetArgs(ffmpegArgs...)
+
 	go func() {
-		ffmpegCmd.Run("./audio/out-%d.m4a")
+		err = ffmpegCmd.Start("./audio/out-%d.m4a")
 		if err != nil {
 			log.Println("ffmpeg error:" + err.Error())
 			return
 		}
+		for {
+			select {
+			case <- ffmpegCmd.isPlay: ffmpegCmd.Process.Kill()
+			default: continue
+			}
+		}
 	}()
 
-	v, err := ChannelVoiceJoin(s, m)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
 	s.ChannelMessageSend(m.ChannelID, "バッファリング中... 30秒お待ち下さい")
-	time.Sleep(time.Second * 30)
+	time.Sleep(time.Second * 10)
 	s.ChannelMessageSend(m.ChannelID, "再生します")
 
-	number := 0
-	for {
-		stop := make(chan bool)
-		path := fmt.Sprintf("./audio/out-%d.m4a", number)
-		dgvoice.PlayAudioFile(v, path, stop)
-		log.Println(number)
-		number++
-	}
+	go func() {
+		number := 0
+		for {
+			path := fmt.Sprintf("./audio/out-%d.m4a", number)
+			_, err = os.Stat(path)
+			if os.IsNotExist(err) {
+				s.ChannelMessageSend(m.ChannelID, "バッファリング中... 30秒お待ち下さい")
+				time.Sleep(time.Second * 30)
+				continue
+			}
+			dgvoice.PlayAudioFile(v, path, r.IsVoicePlayStop)
+			os.Remove(path)
+			number++
+
+			select {
+			case <-r.IsRadioStop:
+				return
+			default:
+			}
+		}
+	}()
+
+	return nil
+}
+
+func (r *radiko) RadikoStop() {
+	r.IsVoicePlayStop <- true
+	r.IsRadioStop <- true
+	close(r.IsVoicePlayStop)
 }
