@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"log"
 	"os"
 	"os/signal"
@@ -46,8 +45,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ctx := context.Background()
-	channel, err := NewChannel(ctx)
+	channel, err := NewChannel()
 	if err != nil {
 		log.Fatal(err)
 	}

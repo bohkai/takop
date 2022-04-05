@@ -7,10 +7,9 @@ import (
 
 type ffmpeg struct {
 	*exec.Cmd
-	isPlay chan bool
 }
 
-func NewFfmpeg(ctx context.Context) (*ffmpeg, error) {
+func NewFfmpeg() (*ffmpeg, error) {
 	cmdPath, err := exec.LookPath("ffmpeg")
 	if err != nil {
 		return nil, err
@@ -18,10 +17,9 @@ func NewFfmpeg(ctx context.Context) (*ffmpeg, error) {
 
 	return &ffmpeg{
 		exec.CommandContext(
-			ctx,
+			context.Background(),
 			cmdPath,
-		),
-		make(chan bool)}, nil
+		),}, nil
 }
 
 func (f *ffmpeg) SetArgs(args ...string) {
@@ -35,9 +33,4 @@ func (f *ffmpeg) Start(output string) error {
 
 func (f *ffmpeg) Kill() error {
 	return f.Cmd.Process.Kill()
-}
-
-func (f *ffmpeg) Stop() {
-	f.isPlay <- true
-	close(f.isPlay)
 }

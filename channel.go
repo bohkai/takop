@@ -1,28 +1,24 @@
 package main
 
 import (
-	"context"
 	"log"
-
 	"github.com/bwmarrin/discordgo"
+	"context"
 )
 
 type Channel struct {
-	ffmpeg *ffmpeg
 	radiko *radiko
-	ctx context.Context
+	cancel  context.CancelFunc
 }
 
-func NewChannel(ctx context.Context) (*Channel, error) {
-	radiko, err := NewRadiko(ctx)
+func NewChannel() (*Channel, error) {
+	radiko, err := NewRadiko()
 	if err != nil {
 		return nil, err
 	}
-
 	return &Channel{
-		nil,
 		radiko,
-		ctx,
+		nil,
 	}, nil
 }
 
@@ -66,6 +62,7 @@ func (c *Channel) Leave(s *discordgo.Session, m *discordgo.MessageCreate) {
 				continue
 			}
 			s.VoiceConnections[vs.GuildID].Disconnect()
+			c.Stop()
 		}
 	}
 }
@@ -85,19 +82,17 @@ func (c *Channel) Play(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
+	c.Stop()
+	ctx, cancel := context.WithCancel(context.Background())
+	c.cancel = cancel
+
 	v, err := c.ChannelVoiceJoin(s, m)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	ffmpeg, err := NewFfmpeg(c.ctx)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	c.ffmpeg = ffmpeg
-	err = c.radiko.RadikoPlay(s, m, v, parsed[1], c.ffmpeg)
+	err = c.radiko.RadikoPlay(s, m, v, ctx, parsed[1])
 	if err != nil {
 		log.Println(err)
 		return
@@ -132,4 +127,17 @@ func (c *Channel) ChannelVoiceJoin(s *discordgo.Session, m *discordgo.MessageCre
 	}
 
 	return nil, nil
+}
+
+func (c *Channel) Stop() {
+	if c.cancel != nil {
+		c.cancel()
+	}
+
+	select {
+	case c.radiko.IsVoicePlayStop <- true:
+		close(c.radiko.IsVoicePlayStop)
+		c.radiko.IsVoicePlayStop = make(chan bool)
+	default:
+	}
 }
