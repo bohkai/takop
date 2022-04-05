@@ -123,6 +123,7 @@ func RadioPlay(s *discordgo.Session, m *discordgo.MessageCreate) {
 		stop := make(chan bool)
 		path := fmt.Sprintf("./audio/out-%d.m4a", number)
 		dgvoice.PlayAudioFile(v, path, stop)
+		log.Println(number)
 		number++
 	}
 }
