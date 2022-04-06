@@ -50,6 +50,10 @@ func (r *radiko) RadikoList(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func (r *radiko) RadikoPlay(s *discordgo.Session, m *discordgo.MessageCreate, v *discordgo.VoiceConnection, ctx context.Context, channel string) error {
+	if channel == "" {
+		return errors.New("channel is empty")
+	}
+
 	items, err := goradiko.GetStreamSmhMultiURL(channel)
 	if err != nil {
 		return err
@@ -119,7 +123,6 @@ func (r *radiko) RadikoPlay(s *discordgo.Session, m *discordgo.MessageCreate, v 
 					select {
 					case <-t.C:
 						if v.Ready {
-							s.ChannelMessageSend(m.ChannelID, "再生開始")
 							break L
 						}
 					case <-ctx.Done():

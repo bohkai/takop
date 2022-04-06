@@ -88,7 +88,7 @@ func (c *Channel) Play(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	v, err := c.ChannelVoiceJoin(s, m)
 	if err != nil {
-		log.Println(err)
+		log.Println("join error:" + err.Error())
 		return
 	}
 
