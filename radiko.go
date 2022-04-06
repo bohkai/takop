@@ -119,9 +119,11 @@ func (r *radiko) RadikoPlay(s *discordgo.Session, m *discordgo.MessageCreate, v 
 					select {
 					case <-t.C:
 						if v.Ready {
+							s.ChannelMessageSend(m.ChannelID, "再生開始")
 							break L
 						}
 					case <-ctx.Done():
+						log.Println("radiko done")
 						return
 					}
 				}
