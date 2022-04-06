@@ -1,14 +1,14 @@
 package main
 
 import (
-	"log"
-	"github.com/bwmarrin/discordgo"
 	"context"
+	"github.com/bwmarrin/discordgo"
+	"log"
 )
 
 type Channel struct {
 	radiko *radiko
-	cancel  context.CancelFunc
+	cancel context.CancelFunc
 }
 
 func NewChannel() (*Channel, error) {
@@ -22,7 +22,7 @@ func NewChannel() (*Channel, error) {
 	}, nil
 }
 
-func (c *Channel)Join(s *discordgo.Session, m *discordgo.MessageCreate) {
+func (c *Channel) Join(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
@@ -117,16 +117,11 @@ func (c *Channel) List(s *discordgo.Session, m *discordgo.MessageCreate) {
 }
 
 func (c *Channel) ChannelVoiceJoin(s *discordgo.Session, m *discordgo.MessageCreate) (*discordgo.VoiceConnection, error) {
-	for _, g := range s.State.Guilds {
-		for _, vs := range g.VoiceStates {
-			if m.Author.ID != vs.UserID {
-				continue
-			}
-			return s.ChannelVoiceJoin(g.ID, vs.ChannelID, false, false)
-		}
+	vs, err := s.State.VoiceState(m.GuildID, m.Author.ID)
+	if err != nil {
+		return nil, err
 	}
-
-	return nil, nil
+	return s.ChannelVoiceJoin(m.GuildID, vs.ChannelID, false, false)
 }
 
 func (c *Channel) Stop() {
