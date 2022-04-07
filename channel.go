@@ -56,15 +56,8 @@ func (c *Channel) Leave(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	for _, g := range s.State.Guilds {
-		for _, vs := range g.VoiceStates {
-			if m.Author.ID != vs.UserID {
-				continue
-			}
-			s.VoiceConnections[vs.GuildID].Disconnect()
-			c.Stop()
-		}
-	}
+	s.VoiceConnections[m.GuildID].Disconnect()
+	c.Stop()
 }
 
 func (c *Channel) Play(s *discordgo.Session, m *discordgo.MessageCreate) {
