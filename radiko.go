@@ -73,7 +73,7 @@ func (r *radiko) RadikoPlay(s *discordgo.Session, m *discordgo.MessageCreate, v 
 
 	_, err = r.client.AuthorizeToken(context.Background())
 	if err != nil {
-		return  err
+		return err
 	}
 	token := r.client.AuthToken()
 
@@ -93,12 +93,15 @@ func (r *radiko) RadikoPlay(s *discordgo.Session, m *discordgo.MessageCreate, v 
 	}
 	ffmpegCmd.SetArgs(ffmpegArgs...)
 
-	go func(ctx context.Context) {
-		err = ffmpegCmd.Start("./audio/out-%d.m4a")
+	go func() {
+		err = ffmpegCmd.Run("./audio/out-%d.m4a")
 		if err != nil {
 			log.Println("ffmpeg error:" + err.Error())
 			return
 		}
+	}()
+
+	go func(ctx context.Context) {
 		<-ctx.Done()
 		log.Println("ffmpeg done")
 		err = ffmpegCmd.Kill()
@@ -118,7 +121,8 @@ func (r *radiko) RadikoPlay(s *discordgo.Session, m *discordgo.MessageCreate, v 
 			if os.IsNotExist(err) {
 				t := time.NewTicker(time.Second * 30)
 				s.ChannelMessageSend(m.ChannelID, "バッファリング中... 30秒お待ち下さい")
-				L: for {
+			L:
+				for {
 					select {
 					case <-t.C:
 						if v.Ready {
@@ -133,12 +137,11 @@ func (r *radiko) RadikoPlay(s *discordgo.Session, m *discordgo.MessageCreate, v 
 			}
 			dgvoice.PlayAudioFile(v, path, r.IsVoicePlayStop)
 			number++
-
 			select {
 			case <-ctx.Done():
 				log.Println("radiko done")
 				return
-			case <- r.IsVoicePlayStop:
+			case <-r.IsVoicePlayStop:
 			default:
 				os.Remove(path)
 			}
