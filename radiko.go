@@ -14,7 +14,7 @@ import (
 )
 
 type radiko struct {
-	client          *goradiko.Client
+	client *goradiko.Client
 }
 
 func NewRadiko() (*radiko, error) {
@@ -87,17 +87,20 @@ func (r *radiko) RadikoPlay(s *discordgo.Session, m *discordgo.MessageCreate, v 
 	}
 	ffmpegbuf := bufio.NewReaderSize(ffmpegout, 16384)
 
-	err = ffmpegCmd.Start("pipe:1")
-	if err != nil {
-		return err
-	}
+	go func() {
+		err = ffmpegCmd.Run("pipe:1")
+		if err != nil {
+			log.Println("ffmpeg error:" + err.Error())
+			s.ChannelMessageSend(m.ChannelID, "ffmpegが死んでるッピ！")
+		}
+	}()
 
 	go func(ctx context.Context) {
 		<-ctx.Done()
 		log.Println("ffmpeg done")
 		err = ffmpegCmd.Kill()
 		if err != nil {
-			s.ChannelMessageSend(m.ChannelID,"完膚なきまでにffmpegを壊さなきゃ")
+			s.ChannelMessageSend(m.ChannelID, "完膚なきまでにffmpegを壊さなきゃ")
 			log.Println("ffmpeg kill error:" + err.Error())
 			return
 		}

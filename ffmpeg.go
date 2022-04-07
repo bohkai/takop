@@ -27,9 +27,9 @@ func (f *ffmpeg) SetArgs(args ...string) {
 	f.Args = append(f.Args, args...)
 }
 
-func (f *ffmpeg) Start(output string) error {
+func (f *ffmpeg) Run(output string) error {
 	f.SetArgs(output)
-	return f.Cmd.Start()
+	return f.Cmd.Run()
 }
 
 func (f *ffmpeg) Kill() error {
