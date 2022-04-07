@@ -1,12 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"context"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"log"
-	"os"
-	"time"
 
 	"github.com/bwmarrin/dgvoice"
 	"github.com/bwmarrin/discordgo"
@@ -44,7 +44,7 @@ func (r *radiko) RadikoList(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 func (r *radiko) RadikoPlay(s *discordgo.Session, m *discordgo.MessageCreate, v *discordgo.VoiceConnection, ctx context.Context, channel string) error {
 	if channel == "" {
-		return errors.New("channel is empty")
+		return errors.New("idを入れると幸せになれるッピ！")
 	}
 
 	items, err := goradiko.GetStreamSmhMultiURL(channel)
@@ -61,19 +61,12 @@ func (r *radiko) RadikoPlay(s *discordgo.Session, m *discordgo.MessageCreate, v 
 	}
 
 	if streamURL == "" {
-		return errors.New("no stream URL")
-	}
-
-	audioPath := "./audio"
-	os.RemoveAll(audioPath)
-	_, err = os.Stat(audioPath)
-	if os.IsNotExist(err) {
-		os.Mkdir(audioPath, 0777)
+		return errors.New("配信中のストリームが見つからないッピ！")
 	}
 
 	_, err = r.client.AuthorizeToken(context.Background())
 	if err != nil {
-		return err
+		return errors.New("authorize token error")
 	}
 	token := r.client.AuthToken()
 
@@ -84,66 +77,58 @@ func (r *radiko) RadikoPlay(s *discordgo.Session, m *discordgo.MessageCreate, v 
 	ffmpegArgs := []string{
 		"-headers", "X-Radiko-Authtoken: " + token,
 		"-i", streamURL,
-		"-f",
-		"segment", "-segment_time", "30",
-		"-y",
-		"-vn",
-		"-acodec",
-		"copy",
+		"-f", "s16le",
+		"-ar", "48000",
+		"-ac", "2",
 	}
-	ffmpegCmd.SetArgs(ffmpegArgs...)
 
-	go func() {
-		err = ffmpegCmd.Run("./audio/out-%d.m4a")
-		if err != nil {
-			log.Println("ffmpeg error:" + err.Error())
-			return
-		}
-	}()
+	ffmpegCmd.SetArgs(ffmpegArgs...)
+	ffmpegout, err := ffmpegCmd.StdoutPipe()
+	if err != nil {
+		return err
+	}
+	ffmpegbuf := bufio.NewReaderSize(ffmpegout, 16384)
+
+	err = ffmpegCmd.Start("pipe:1")
+	if err != nil {
+		return err
+	}
 
 	go func(ctx context.Context) {
 		<-ctx.Done()
 		log.Println("ffmpeg done")
 		err = ffmpegCmd.Kill()
 		if err != nil {
+			s.ChannelMessageSend(m.ChannelID,"完膚なきまでにffmpegを壊さなきゃ")
 			log.Println("ffmpeg kill error:" + err.Error())
 			return
 		}
 	}(ctx)
 
 	go func(ctx context.Context) {
-		number := 0
-		path := ""
+		v.Speaking(true)
+		send := make(chan []int16, 2)
+		defer close(send)
+		defer v.Speaking(false)
+
+		go func() {
+			dgvoice.SendPCM(v, send)
+			r.IsVoicePlayStop <- true
+		}()
 
 		for {
-			path = fmt.Sprintf("./audio/out-%d.m4a", number)
-			_, err = os.Stat(path)
-			if os.IsNotExist(err) {
-				t := time.NewTicker(time.Second * 30)
-				s.ChannelMessageSend(m.ChannelID, "バッファリング中... 30秒お待ち下さい")
-			L:
-				for {
-					select {
-					case <-t.C:
-						if v.Ready {
-							break L
-						}
-					case <-ctx.Done():
-						log.Println("radiko done")
-						return
-					}
-				}
-				continue
-			}
-			dgvoice.PlayAudioFile(v, path, r.IsVoicePlayStop)
-			number++
-			select {
-			case <-ctx.Done():
-				log.Println("radiko done")
+			audiobuf := make([]int16, 960*2)
+			if err := binary.Read(ffmpegbuf, binary.LittleEndian, &audiobuf); err != nil {
+				log.Println("binary.Read error:" + err.Error())
+				s.ChannelMessageSend(m.ChannelID, "binaryがわ わかんないッピ……")
 				return
-			case <-r.IsVoicePlayStop:
-			default:
-				os.Remove(path)
+			}
+			select {
+			case send <- audiobuf:
+				continue
+			case <-ctx.Done():
+				log.Println("ctx done")
+				return
 			}
 		}
 	}(ctx)

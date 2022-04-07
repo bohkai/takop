@@ -81,13 +81,15 @@ func (c *Channel) Play(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	v, err := c.ChannelVoiceJoin(s, m)
 	if err != nil {
-		log.Println("join error:" + err.Error())
+		log.Println(err.Error())
+		s.ChannelMessageSend(m.ChannelID, "チャンネルに入れないッピ、ちゃんとお話しするッピ ")
 		return
 	}
 
 	err = c.radiko.RadikoPlay(s, m, v, ctx, parsed[1])
 	if err != nil {
 		log.Println(err)
+		s.ChannelMessageSend(m.ChannelID, "なんで死んだ？\n" + err.Error())
 		return
 	}
 }
