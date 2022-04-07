@@ -15,7 +15,6 @@ import (
 
 type radiko struct {
 	client          *goradiko.Client
-	token           string
 	IsVoicePlayStop chan bool
 }
 
@@ -25,14 +24,8 @@ func NewRadiko() (*radiko, error) {
 		return nil, err
 	}
 
-	_, err = client.AuthorizeToken(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
 	return &radiko{
 		client,
-		client.AuthToken(),
 		make(chan bool),
 	}, nil
 }
@@ -78,12 +71,18 @@ func (r *radiko) RadikoPlay(s *discordgo.Session, m *discordgo.MessageCreate, v 
 		os.Mkdir(audioPath, 0777)
 	}
 
+	_, err = r.client.AuthorizeToken(context.Background())
+	if err != nil {
+		return  err
+	}
+	token := r.client.AuthToken()
+
 	ffmpegCmd, err := NewFfmpeg()
 	if err != nil {
 		return err
 	}
 	ffmpegArgs := []string{
-		"-headers", "X-Radiko-Authtoken: " + r.token,
+		"-headers", "X-Radiko-Authtoken: " + token,
 		"-i", streamURL,
 		"-f",
 		"segment", "-segment_time", "30",
