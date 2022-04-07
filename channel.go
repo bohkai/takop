@@ -123,11 +123,4 @@ func (c *Channel) Stop() {
 	if c.cancel != nil {
 		c.cancel()
 	}
-
-	select {
-	case c.radiko.IsVoicePlayStop <- true:
-		close(c.radiko.IsVoicePlayStop)
-		c.radiko.IsVoicePlayStop = make(chan bool)
-	default:
-	}
 }

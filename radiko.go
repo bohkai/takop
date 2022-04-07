@@ -15,7 +15,6 @@ import (
 
 type radiko struct {
 	client          *goradiko.Client
-	IsVoicePlayStop chan bool
 }
 
 func NewRadiko() (*radiko, error) {
@@ -26,7 +25,6 @@ func NewRadiko() (*radiko, error) {
 
 	return &radiko{
 		client,
-		make(chan bool),
 	}, nil
 }
 
@@ -113,7 +111,6 @@ func (r *radiko) RadikoPlay(s *discordgo.Session, m *discordgo.MessageCreate, v 
 
 		go func() {
 			dgvoice.SendPCM(v, send)
-			r.IsVoicePlayStop <- true
 		}()
 
 		for {
