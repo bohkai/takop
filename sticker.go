@@ -67,8 +67,11 @@ func (st *sticker) Serch(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	go func ()  {
 		user := GetUser(s, m.Message)
-		if err := user.AsSend(s, m.Message, call.Items[0].Link); err != nil {
+		link := call.Items[0].Link
+		user.name = user.name + " (" + link + ")"
+		if err := user.AsSend(s, m.Message, link); err != nil {
 			log.Println(err)
+			s.ChannelMessageSend(m.ChannelID, "なかったッピ……")
 			return;
 		}
 	}()
