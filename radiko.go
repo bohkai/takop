@@ -28,7 +28,7 @@ func NewRadiko() (*radiko, error) {
 	}, nil
 }
 
-func (r *radiko) RadikoList(s *discordgo.Session, m *discordgo.MessageCreate) {
+func (r *radiko) RadikoList(s *discordgo.Session, m *discordgo.Message) {
 	stations, err := r.client.GetNowPrograms(context.Background())
 	if err != nil {
 		return
@@ -40,7 +40,7 @@ func (r *radiko) RadikoList(s *discordgo.Session, m *discordgo.MessageCreate) {
 	s.ChannelMessageSend(m.ChannelID, message)
 }
 
-func (r *radiko) RadikoPlay(s *discordgo.Session, m *discordgo.MessageCreate, v *discordgo.VoiceConnection, ctx context.Context, channel string) error {
+func (r *radiko) RadikoPlay(s *discordgo.Session, m *discordgo.Message, v *discordgo.VoiceConnection, ctx context.Context, channel string) error {
 	if channel == "" {
 		return errors.New("idを入れると幸せになれるッピ！")
 	}

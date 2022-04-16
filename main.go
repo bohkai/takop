@@ -40,7 +40,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	app, err := New(config)
+	app, err := New(config.Discord)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -49,6 +49,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	sticker := NewSticker(config.Google)
 
 	err = app.Open()
 	if err != nil {
@@ -59,6 +61,7 @@ func main() {
 	app.Session.AddHandler(channel.Leave)
 	app.Session.AddHandler(channel.List)
 	app.Session.AddHandler(channel.Play)
+	app.Session.AddHandler(sticker.Serch)
 
 	log.Println("Bot is now running.  Press CTRL-C to exit.")
 

@@ -22,7 +22,7 @@ func NewChannel() (*Channel, error) {
 	}, nil
 }
 
-func (c *Channel) Join(s *discordgo.Session, m *discordgo.MessageCreate) {
+func (c *Channel) Join(s *discordgo.Session, m *discordgo.Message) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
@@ -60,7 +60,7 @@ func (c *Channel) Leave(s *discordgo.Session, m *discordgo.MessageCreate) {
 	c.Stop()
 }
 
-func (c *Channel) Play(s *discordgo.Session, m *discordgo.MessageCreate) {
+func (c *Channel) Play(s *discordgo.Session, m *discordgo.Message) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
@@ -94,7 +94,7 @@ func (c *Channel) Play(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 }
 
-func (c *Channel) List(s *discordgo.Session, m *discordgo.MessageCreate) {
+func (c *Channel) List(s *discordgo.Session, m *discordgo.Message) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
@@ -111,7 +111,7 @@ func (c *Channel) List(s *discordgo.Session, m *discordgo.MessageCreate) {
 	c.radiko.RadikoList(s, m)
 }
 
-func (c *Channel) ChannelVoiceJoin(s *discordgo.Session, m *discordgo.MessageCreate) (*discordgo.VoiceConnection, error) {
+func (c *Channel) ChannelVoiceJoin(s *discordgo.Session, m *discordgo.Message) (*discordgo.VoiceConnection, error) {
 	vs, err := s.State.VoiceState(m.GuildID, m.Author.ID)
 	if err != nil {
 		return nil, err
