@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"strings"
+	"log"
 
 	"github.com/bwmarrin/discordgo"
 	customsearch "google.golang.org/api/customsearch/v1"
@@ -19,7 +20,7 @@ func NewSticker(config *GoogleConfig) *sticker {
 	}
 }
 
-func (st *sticker) Serch(s *discordgo.Session, m *discordgo.Message) {
+func (st *sticker) Serch(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
@@ -57,5 +58,18 @@ func (st *sticker) Serch(s *discordgo.Session, m *discordgo.Message) {
 		return
 	}
 
-	s.ChannelMessageSend(m.ChannelID, call.Items[0].Link)
+	go func ()  {
+		if err := s.ChannelMessageDelete(m.ChannelID, m.ID); err != nil {
+			log.Println(err)
+			return;
+		}
+	}()
+
+	go func ()  {
+		user := GetUser(s, m.Message)
+		if err := user.AsSend(s, m.Message, call.Items[0].Link); err != nil {
+			log.Println(err)
+			return;
+		}
+	}()
 }

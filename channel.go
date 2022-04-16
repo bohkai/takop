@@ -22,7 +22,7 @@ func NewChannel() (*Channel, error) {
 	}, nil
 }
 
-func (c *Channel) Join(s *discordgo.Session, m *discordgo.Message) {
+func (c *Channel) Join(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
@@ -36,7 +36,7 @@ func (c *Channel) Join(s *discordgo.Session, m *discordgo.Message) {
 		return
 	}
 
-	_, err = c.ChannelVoiceJoin(s, m)
+	_, err = c.ChannelVoiceJoin(s, m.Message)
 	if err != nil {
 		return
 	}
@@ -60,7 +60,7 @@ func (c *Channel) Leave(s *discordgo.Session, m *discordgo.MessageCreate) {
 	c.Stop()
 }
 
-func (c *Channel) Play(s *discordgo.Session, m *discordgo.Message) {
+func (c *Channel) Play(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
@@ -79,14 +79,14 @@ func (c *Channel) Play(s *discordgo.Session, m *discordgo.Message) {
 	ctx, cancel := context.WithCancel(context.Background())
 	c.cancel = cancel
 
-	v, err := c.ChannelVoiceJoin(s, m)
+	v, err := c.ChannelVoiceJoin(s, m.Message)
 	if err != nil {
 		log.Println(err.Error())
 		s.ChannelMessageSend(m.ChannelID, "チャンネルに入れないッピ、ちゃんとお話しするッピ ")
 		return
 	}
 
-	err = c.radiko.RadikoPlay(s, m, v, ctx, parsed[1])
+	err = c.radiko.RadikoPlay(s, m.Message, v, ctx, parsed[1])
 	if err != nil {
 		log.Println(err)
 		s.ChannelMessageSend(m.ChannelID, "なんで死んだ？\n" + err.Error())
@@ -94,7 +94,7 @@ func (c *Channel) Play(s *discordgo.Session, m *discordgo.Message) {
 	}
 }
 
-func (c *Channel) List(s *discordgo.Session, m *discordgo.Message) {
+func (c *Channel) List(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
@@ -108,7 +108,7 @@ func (c *Channel) List(s *discordgo.Session, m *discordgo.Message) {
 		return
 	}
 
-	c.radiko.RadikoList(s, m)
+	c.radiko.RadikoList(s, m.Message)
 }
 
 func (c *Channel) ChannelVoiceJoin(s *discordgo.Session, m *discordgo.Message) (*discordgo.VoiceConnection, error) {
