@@ -62,6 +62,7 @@ func main() {
 	app.Session.AddHandler(channel.List)
 	app.Session.AddHandler(channel.Play)
 	app.Session.AddHandler(sticker.Serch)
+	
 
 	log.Println("Bot is now running.  Press CTRL-C to exit.")
 
