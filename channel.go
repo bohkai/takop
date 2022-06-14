@@ -70,10 +70,6 @@ func (c *Channel) Play(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	c.Stop()
-	ctx, cancel := context.WithCancel(context.Background())
-	c.cancel = cancel
-
 	parsed, err := Parse(m.Content)
 	if err != nil {
 		log.Println(err)
@@ -91,6 +87,10 @@ func (c *Channel) Play(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
+	c.Stop()
+	ctx, cancel := context.WithCancel(context.Background())
+	c.cancel = cancel
+
 	err = c.radiko.RadikoPlay(s, m.Message, v, ctx, parsed[1])
 	if err != nil {
 		log.Println(err)
@@ -102,10 +102,6 @@ func (c *Channel) PlaySE(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
-
-	c.Stop()
-	ctx, cancel := context.WithCancel(context.Background())
-	c.cancel = cancel
 
 	if len(m.Message.Attachments) != 1 {
 		return
@@ -124,6 +120,9 @@ func (c *Channel) PlaySE(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
+	c.Stop()
+	ctx, cancel := context.WithCancel(context.Background())
+	c.cancel = cancel
 	c.se.Play(s, m.Message, v, ctx, url)
 }
 
@@ -176,6 +175,23 @@ func (c *Channel) ChannelVoiceJoin(s *discordgo.Session, m *discordgo.Message) (
 		return nil, err
 	}
 	return s.ChannelVoiceJoin(m.GuildID, vs.ChannelID, false, false)
+}
+
+func (c *Channel) StopSound(s *discordgo.Session, m *discordgo.MessageCreate) {
+	if m.Author.ID == s.State.User.ID {
+		return
+	}
+
+	parsed, err := Parse(m.Content)
+	if err != nil {
+		return
+	}
+
+	if len(parsed) != 1 || parsed[0] != "stop" {
+		return
+	}
+
+	c.Stop()
 }
 
 func (c *Channel) Stop() {
