@@ -5,7 +5,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"context"
 	"bufio"
-	"encoding/binary"
 	"log"
 )
 
@@ -64,20 +63,9 @@ func (e *SE) Play(s *discordgo.Session, m *discordgo.Message, v *discordgo.Voice
 			dgvoice.SendPCM(v, send)
 		}()
 
-		for {
-			audiobuf := make([]int16, 960*2)
-			if err := binary.Read(ffmpegbuf, binary.LittleEndian, &audiobuf); err != nil {
-				//バイナリーが読めなくなる終了
-				return
-			}
-
-			select {
-			case send <- audiobuf:
-				continue
-			case <-ctx.Done():
-				log.Println("ctx done")
-				return
-			}
+		err := ffmpegCmd.Play(ffmpegbuf, send, ctx)
+		if err != nil {
+			return
 		}
 	}(ctx)
 

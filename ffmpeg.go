@@ -1,7 +1,9 @@
 package main
 
 import (
+	"bufio"
 	"context"
+	"encoding/binary"
 	"os/exec"
 )
 
@@ -34,4 +36,19 @@ func (f *ffmpeg) Start(output string) error {
 
 func (f *ffmpeg) Kill() error {
 	return f.Cmd.Process.Kill()
+}
+
+func (f *ffmpeg) Play(buf *bufio.Reader, send chan[]int16 , ctx context.Context) error {
+	for {
+		audiobuf := make([]int16, 960*2)
+		if err := binary.Read(buf, binary.LittleEndian, &audiobuf); err != nil {
+			return err
+		}
+		select {
+		case send <- audiobuf:
+			continue
+		case <-ctx.Done():
+			return nil
+		}
+	}
 }
