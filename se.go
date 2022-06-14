@@ -67,10 +67,10 @@ func (e *SE) Play(s *discordgo.Session, m *discordgo.Message, v *discordgo.Voice
 		for {
 			audiobuf := make([]int16, 960*2)
 			if err := binary.Read(ffmpegbuf, binary.LittleEndian, &audiobuf); err != nil {
-				s.ChannelMessageSend(m.ChannelID, "binaryが わ わかんないッピ……")
-				log.Println("binary.Read error:" + err.Error())
+				//バイナリーが読めなくなる終了
 				return
 			}
+
 			select {
 			case send <- audiobuf:
 				continue
