@@ -17,7 +17,6 @@ func NewSE() *SE {
 }
 
 func (e *SE) Play(s *discordgo.Session, m *discordgo.Message, v *discordgo.VoiceConnection, ctx context.Context, url string) error {
-	e.setURL(url)
 	ffmpegCmd, err := NewFfmpeg()
 	if err != nil {
 		return err

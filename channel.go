@@ -103,15 +103,22 @@ func (c *Channel) PlaySE(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	if len(m.Message.Attachments) != 1 {
-		return
+	url := ""
+	if len(m.Message.Attachments) == 1 {
+		sp := strings.Split(url, ".")
+		l := len(sp) - 1
+		if len(sp) != 2 && !(sp[l] == "mp3" || sp[l] == "wav") {
+			return
+		}
+		url = m.Message.Attachments[0].URL
 	}
 
-	url := m.Message.Attachments[0].URL
-	sp := strings.Split(url, ".")
-	l := len(sp) - 1
-	if len(sp) != 2 && !(sp[l] == "mp3" || sp[l] == "wav") {
-		return
+	ex := strings.Split(m.Content, ".")
+	if len(ex) == 2 {
+		if ex[1] != "mp3" && ex[1] != "wav" {
+			return
+		}
+		url = m.Content
 	}
 
 	v, err := c.ChannelVoiceJoin(s, m.Message)
@@ -123,10 +130,11 @@ func (c *Channel) PlaySE(s *discordgo.Session, m *discordgo.MessageCreate) {
 	c.Stop()
 	ctx, cancel := context.WithCancel(context.Background())
 	c.cancel = cancel
+	c.se.url = url
 	c.se.Play(s, m.Message, v, ctx, url)
 }
 
-func (c *Channel)ReplaySE(s *discordgo.Session, m *discordgo.MessageCreate) {
+func (c *Channel) ReplaySE(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == s.State.User.ID {
 		return
 	}
