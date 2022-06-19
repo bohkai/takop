@@ -105,20 +105,23 @@ func (c *Channel) PlaySE(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	url := ""
 	if len(m.Message.Attachments) == 1 {
-		sp := strings.Split(url, ".")
-		l := len(sp) - 1
-		if len(sp) != 2 && !(sp[l] == "mp3" || sp[l] == "wav") {
-			return
+		urls := m.Message.Attachments[0].URL
+		if strings.HasPrefix(urls, "https://") &&
+			(strings.HasSuffix(urls, ".mp3") || strings.HasSuffix(urls, ".wav")) {
+			url = urls
 		}
-		url = m.Message.Attachments[0].URL
 	}
 
-	ex := strings.Split(m.Content, ".")
-	if len(ex) == 2 {
-		if ex[1] != "mp3" && ex[1] != "wav" {
-			return
+	if m.Content != "" {
+		urls := m.Content
+		if strings.HasPrefix(urls, "https://") &&
+			(strings.HasSuffix(urls, ".mp3") || strings.HasSuffix(urls, ".wav")) {
+			url = urls
 		}
-		url = m.Content
+	}
+
+	if url == "" {
+		return
 	}
 
 	v, err := c.ChannelVoiceJoin(s, m.Message)
