@@ -32,7 +32,7 @@ func (c *Channel) Join(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	parsed, err := Parse(m.Content)
+	parsed, _, err := Parse(m.Content)
 	if err != nil {
 		return
 	}
@@ -52,7 +52,7 @@ func (c *Channel) Leave(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	parsed, err := Parse(m.Content)
+	parsed, _, err := Parse(m.Content)
 	if err != nil {
 		return
 	}
@@ -70,7 +70,7 @@ func (c *Channel) Play(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	parsed, err := Parse(m.Content)
+	parsed, _, err := Parse(m.Content)
 	if err != nil {
 		log.Println(err)
 		return
@@ -142,7 +142,7 @@ func (c *Channel) ReplaySE(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	parsed, err := Parse(m.Content)
+	parsed, _, err := Parse(m.Content)
 	if err != nil {
 		return
 	}
@@ -168,7 +168,7 @@ func (c *Channel) List(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	parsed, err := Parse(m.Content)
+	parsed, _, err := Parse(m.Content)
 	if err != nil {
 		return
 	}
@@ -193,7 +193,7 @@ func (c *Channel) StopSound(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	parsed, err := Parse(m.Content)
+	parsed, _, err := Parse(m.Content)
 	if err != nil {
 		return
 	}
