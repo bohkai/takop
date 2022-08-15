@@ -1,4 +1,4 @@
-module github.com/garebareDA/discordRadio
+module github.com/bohkai/takop
 
 go 1.18
 
