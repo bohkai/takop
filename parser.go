@@ -13,6 +13,10 @@ func Parse(message string)([]string, *string, error){
 	if message[0:1] == "?" {
 		split := strings.Split(message[1:], " ")
 		lastWard := split[len(split) - 1]
+		if len(lastWard) == 0 {
+			return nil, nil, nil
+		}
+
 		if lastWard[0:1] == "-" {
 			last := lastWard[1:]
 			return split, &last, nil
