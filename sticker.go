@@ -43,6 +43,11 @@ func (st *sticker) Serch(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		imageIndex = i
 
+		if imageIndex < 0 {
+			s.ChannelMessageSend(m.ChannelID, "オプションの値が小さすぎるッピ!")
+			return
+		}
+
 		if imageIndex >= 10 {
 			s.ChannelMessageSend(m.ChannelID, "オプションの値が大きすぎるッピ!")
 			return
