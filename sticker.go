@@ -54,20 +54,20 @@ func (st *sticker) Serch(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 	}
 
-	serchWord := strings.Join(parsed[1:], " ")
+	searchWord := strings.Join(parsed[1:], " ")
 	ctx := context.Background()
 	service, err := customsearch.NewService(ctx, option.WithAPIKey(st.GoogleConfig.Key))
 	if err != nil {
 		s.ChannelMessageSend(m.ChannelID, "Google API……なんで、死んだ？")
 		return
 	}
-	serch := service.Cse.List()
-	serch.Q(serchWord)
-	serch.Cx(st.GoogleConfig.ID)
-	serch.Num(10)
-	serch.SearchType("image")
+	search := service.Cse.List()
+	search.Q(searchWord)
+	search.Cx(st.GoogleConfig.ID)
+	search.Num(10)
+	search.SearchType("image")
 
-	call, err := serch.Do()
+	call, err := search.Do()
 	if err != nil {
 		s.ChannelMessageSend(m.ChannelID, "探せなかったッピ……")
 		return
