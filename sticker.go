@@ -69,12 +69,18 @@ func (st *sticker) Serch(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	call, err := search.Do()
 	if err != nil {
+		log.Println(err)
 		s.ChannelMessageSend(m.ChannelID, "探せなかったッピ……")
 		return
 	}
 
 	if len(call.Items) == 0 {
 		s.ChannelMessageSend(m.ChannelID, "探せなかったッピ……")
+		return
+	}
+
+	if imageIndex >= len(call.Items) {
+		s.ChannelMessageSend(m.ChannelID, "これ以上画像はないッピ！我慢するッピ！")
 		return
 	}
 
@@ -86,11 +92,6 @@ func (st *sticker) Serch(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}()
 
 	go func() {
-		if imageIndex > len(call.Items) {
-			log.Println(err)
-			s.ChannelMessageSend(m.ChannelID, "なかったッピ……")
-			return
-		}
 		link := call.Items[imageIndex].Link
 		user := GetUser(s, m.Message)
 		user.name = user.name + " (" + searchWord + ")"
