@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	cloud.google.com/go/compute v1.5.0 // indirect
+	github.com/bluele/mecab-golang v0.0.0-20180831023624-c8cfe04e87f9 // indirect
 	github.com/bwmarrin/dgvoice v0.0.0-20210225172318-caaac756e02e // indirect
 	github.com/bwmarrin/discordgo v0.24.0 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect

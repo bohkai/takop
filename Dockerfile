@@ -15,7 +15,7 @@ ENV CGO_LDFLAGS="-L/usr/local/Cellar/mecab/0.996/lib -lmecab -lstdc++"
 ENV CGO_CFLAGS="-I/usr/local/Cellar/mecab/0.996/include"
 
 RUN apt-get update && apt-get install -y
-RUN apt-get install -y git sudo curl gcc opus-tools ffmpeg make g++ xz-utils file
+RUN apt-get install -y git sudo curl gcc opus-tools ffmpeg make g++ xz-utils file pkg-config libopus-dev libopusfile-dev
 RUN curl -O https://dl.google.com/go/go1.20.5.linux-arm64.tar.gz
 RUN rm -rf /usr/local/go && tar -C /usr/local -xzf go1.20.5.linux-arm64.tar.gz
 ENV PATH $PATH:/usr/local/go/bin
@@ -48,4 +48,4 @@ RUN   rm -rf \
 
 WORKDIR /home/${USER}/takop
 COPY . .
-CMD [ "make", "" ]
+CMD [ "make", "run" ]

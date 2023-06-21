@@ -4,4 +4,4 @@ build:
 
 .PHONY:run
 run:
-	go main ./
+	go run ./
