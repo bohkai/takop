@@ -4,4 +4,4 @@ build:
 
 .PHONY:run
 run:
-	docker run --platform=linux/arm64 takop
+	go main ./

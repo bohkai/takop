@@ -48,4 +48,4 @@ RUN   rm -rf \
 
 WORKDIR /home/${USER}/takop
 COPY . .
-CMD [ "make", "run" ]
+CMD [ "make", "" ]
