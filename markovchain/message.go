@@ -36,7 +36,7 @@ func Chain(s *discordgo.Session, m *discordgo.MessageCreate) {
 				s.ChannelMessageSend(m.ChannelID, "元気出すッピ！")
 				return
 			}
-			
+
 			if len(data) <= 1 {
 				continue
 			}
