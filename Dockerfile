@@ -49,4 +49,6 @@ RUN rm -rf \
 WORKDIR /home/${USER}/takop
 COPY . .
 
+RUN go get
+
 CMD [ "make", "run" ]
