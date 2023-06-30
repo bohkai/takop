@@ -31,6 +31,10 @@ func Chain(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		markovBlocks := [][]string{}
 		for _, v := range messages {
+			if len(v.Content) <= 0 {
+				continue
+			}
+
 			firstStr := v.Content[0]
 			if v.MentionEveryone ||
 				len(v.Mentions) > 0 ||
