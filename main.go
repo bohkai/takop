@@ -5,8 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-
-	"github.com/bohkai/takop/markovchain"
 	"github.com/bwmarrin/discordgo"
 )
 
@@ -65,7 +63,6 @@ func main() {
 	app.Session.AddHandler(channel.PlaySE)
 	app.Session.AddHandler(channel.ReplaySE)
 	app.Session.AddHandler(sticker.Serch)
-	app.Session.AddHandler(markovchain.Chain)
 	log.Println("Bot is now running.  Press CTRL-C to exit.")
 
 	sc := make(chan os.Signal, 1)
